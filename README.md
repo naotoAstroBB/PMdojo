@@ -18,6 +18,7 @@ GitHub Pagesで公開する場合は、このフォルダの中身を`PMdojo`リ
 - `data/lessons-*.js`: 循環利用する学習データ
 - `data/essays.js`: 午後II論述フレームワーク
 - `data/essay-drills.js`: 論文・記述向けの短文Q&A
+- `data/past-questions.js`: IPA過去問データ本体
 - `data/past-questions-template.js`: 過去問データ追加用テンプレート
 - `PAST_QUESTIONS_IMPORT.md`: 過去問データの置き場所と追加手順
 

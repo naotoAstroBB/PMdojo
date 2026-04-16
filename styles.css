@@ -268,7 +268,7 @@ main.wrap { padding-block: 14px 28px; }
 .screen-title { padding: 15px; text-align: center; }
 .screen-title h2 { margin: 0 0 6px; color: var(--amber); font-size: 1.25rem; }
 .screen-title p { margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.6; }
-.mode-row { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.mode-row { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 8px; }
 .seg { min-height: 38px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--muted); font-weight: 850; }
 .seg.active { background: rgba(85,206,196,.22); color: var(--teal); border-color: rgba(85,206,196,.48); }
 .essay-mode-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -346,6 +346,13 @@ main.wrap { padding-block: 14px 28px; }
 }
 .sample-answer b { color: var(--amber); font-size: .82rem; }
 .sample-answer p { margin: 6px 0 0; color: #eee5d6; font-size: .9rem; line-height: 1.65; }
+.source-line {
+  margin: 12px 0 0;
+  color: var(--quiet);
+  font-size: .72rem;
+  line-height: 1.45;
+}
+.source-line a { color: var(--teal); }
 
 .tree-wrap { display: grid; place-items: center; padding: 18px 12px; }
 .tree-svg { width: min(250px, 80vw); height: auto; overflow: visible; }

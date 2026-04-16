@@ -22,25 +22,17 @@ PMdojo/
 
 ## 追加の流れ
 
-1. `data/past-questions-template.js`をコピーする
-2. コピーしたファイル名を`past-questions.js`にする
-3. `window.PM_DOJO_PAST_QUESTIONS = [...]`の配列に過去問を追加する
-4. `index.html`に次の1行を追加する
+1. `data/past-questions.js`を開く
+2. `window.PM_DOJO_PAST_QUESTIONS = [...]`の配列に過去問を追加する
+3. GitHubへアップロードする
+
+`index.html`には、すでに次の読み込み行が入っています。
 
 ```html
 <script src="./data/past-questions.js"></script>
 ```
 
-置く位置は、`essay-drills.js`の下、`app.js`の上です。
-
-```html
-<script src="./data/essays.js"></script>
-<script src="./data/essay-drills.js"></script>
-<script src="./data/past-questions.js"></script>
-<script src="./app.js"></script>
-```
-
-この行を追加すると、`kind: "choice"`の過去問は無限練習モードに自動で混ざります。`kind: "short"`と`kind: "essay"`は、午後I・午後II用のデータとして管理できます。
+`kind: "choice"`の過去問は無限練習モードに自動で混ざります。`kind: "short"`は論文道場の短文Q&A、`kind: "essay"`は論文道場の論文テーマ一覧に自動で混ざります。
 
 ## 午前IIの形式
 

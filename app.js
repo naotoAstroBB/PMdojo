@@ -212,6 +212,44 @@ function allQuestions() {
   return lessonQuestions.concat(pastChoiceQuestions);
 }
 
+function pastChoiceQuestions() {
+  return allQuestions().filter(q => q.id && String(q.id).startsWith("past"));
+}
+
+function allEssayDrills() {
+  const pastShort = PAST_QUESTIONS
+    .filter(q => q.kind === "short")
+    .map((q, i) => ({
+      id: q.id || `past-short-${i}`,
+      theme: q.tags?.[0] || q.source?.period || "過去問",
+      type: q.source?.questionNo || "短文",
+      limit: q.limit || "指定字数",
+      prompt: q.prompt,
+      points: q.expectedPoints || [],
+      sample: q.sampleAnswer || "",
+      source: q.source
+    }));
+  return ESSAY_DRILLS.concat(pastShort);
+}
+
+function allEssayTopics() {
+  const pastEssay = PAST_QUESTIONS
+    .filter(q => q.kind === "essay")
+    .map((q, i) => ({
+      theme: q.theme || q.source?.attribution || `過去問論述 ${i + 1}`,
+      icon: "pen",
+      scenario: q.source?.attribution || "IPA過去問の午後II論述テーマ",
+      keywords: q.tags || [],
+      structure: [
+        ["出典", q.source?.attribution || ""],
+        ["設問要求", (q.requirements || []).join(" / ")],
+        ["構成メモ", q.outlineHint || ""]
+      ],
+      source: q.source
+    }));
+  return ESSAYS.concat(pastEssay);
+}
+
 function esc(v) {
   return String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
 }
@@ -399,13 +437,14 @@ function practiceTab() {
     </article>
     <div class="mode-row">
       ${seg("all","全問ランダム")}
+      ${seg("past","過去問")}
       ${seg("wrong","弱点優先")}
       ${seg("recent","最近の範囲")}
     </div>
     ${!q ? `<button class="btn alt" data-action="start-practice">${icon("shuffle")}練習スタート</button>` : `
       <div class="quiz-top"><span>練習 ${state.practiceScore.total + 1}問目</span><span>正答率 ${acc}% (${state.practiceScore.correct}/${state.practiceScore.total})</span></div>
       <div class="note" style="padding:9px;text-align:center;color:var(--muted);font-size:.78rem">Day${q.day}: ${esc(q.title)}</div>
-      <article class="card"><p class="question">${esc(q.q)}</p><div class="choices">${q.c.map((c, i) => choiceButton(q, c, i, "practice-answer", state.practiceSelected, state.practiceAnswered)).join("")}</div></article>
+      <article class="card"><p class="question">${esc(q.q)}</p><div class="choices">${q.c.map((c, i) => choiceButton(q, c, i, "practice-answer", state.practiceSelected, state.practiceAnswered)).join("")}</div>${sourceLine(q.source)}</article>
       ${state.practiceAnswered ? `<button class="btn alt" data-action="next-practice">次の問題 ${icon("right")}</button>` : ""}
       <button class="btn" data-action="start-practice">${icon("shuffle")}出題を作り直す</button>
     `}
@@ -418,7 +457,8 @@ function seg(id, label) {
 
 function essayTab() {
   if (state.essayMode === "short") return essayShortTab();
-  const topic = ESSAYS[state.essayIndex];
+  const topics = allEssayTopics();
+  const topic = topics[state.essayIndex];
   return topic ? essayDetail(topic) : `<section class="stack">
     <article class="card screen-title">
       <h2>論文道場</h2>
@@ -426,7 +466,7 @@ function essayTab() {
     </article>
     ${essayModeSwitch()}
     ${profileEditor()}
-    <div class="essay-list">${ESSAYS.map((t, i) => `<button class="essay-topic" data-action="essay-open" data-essay="${i}">
+    <div class="essay-list">${topics.map((t, i) => `<button class="essay-topic" data-action="essay-open" data-essay="${i}">
       <span>${icon(t.icon)}</span><span><b>${esc(t.theme)}</b><small>${esc(t.scenario)}</small></span><span>${icon("right")}</span>
     </button>`).join("")}</div>
   </section>`;
@@ -440,7 +480,8 @@ function essayModeSwitch() {
 }
 
 function essayShortTab() {
-  const drill = ESSAY_DRILLS[state.essayDrillIndex % Math.max(ESSAY_DRILLS.length, 1)];
+  const drills = allEssayDrills();
+  const drill = drills[state.essayDrillIndex % Math.max(drills.length, 1)];
   if (!drill) {
     return `<section class="stack"><article class="card screen-title"><h2>短文Q&A</h2><p>短文回答データがまだありません。</p></article>${essayModeSwitch()}</section>`;
   }
@@ -471,7 +512,14 @@ function essayDrillFeedback(drill) {
     <div class="card-title">${icon("check")}採点観点</div>
     <div class="badge-row">${drill.points.map(p => `<span class="badge">${esc(p)}</span>`).join("")}</div>
     <div class="sample-answer"><b>模範例</b><p>${esc(drill.sample)}</p></div>
+    ${sourceLine(drill.source)}
   </article>`;
+}
+
+function sourceLine(source) {
+  if (!source?.attribution) return "";
+  const url = source.url ? ` <a href="${esc(source.url)}" target="_blank" rel="noopener">IPA</a>` : "";
+  return `<p class="source-line">${esc(source.attribution)}${url}</p>`;
 }
 
 function profileEditor() {
@@ -496,7 +544,7 @@ function essayDetail(topic) {
   const note = state.essayNotes[topic.theme] || draftEssay(topic);
   return `<section class="stack">
     <button class="link-btn" data-action="essay-back">${icon("left")}テーマ一覧に戻る</button>
-    <article class="card"><div class="card-title">${icon(topic.icon)}${esc(topic.theme)}</div><p class="lesson-text">${esc(topic.scenario)}</p></article>
+    <article class="card"><div class="card-title">${icon(topic.icon)}${esc(topic.theme)}</div><p class="lesson-text">${esc(topic.scenario)}</p>${sourceLine(topic.source)}</article>
     <article class="card"><div class="card-title">${icon("star")}使うキーワード</div><div class="badge-row">${topic.keywords.map(k => `<span class="badge">${esc(k)}</span>`).join("")}</div></article>
     <section class="outline">${topic.structure.map(([h, body]) => `<article><b>${esc(h)}</b><p>${esc(body)}</p></article>`).join("")}</section>
     <article class="card">
@@ -606,6 +654,10 @@ function removeWrong(id) {
 function startPractice() {
   const qs = allQuestions();
   let pool = qs;
+  if (state.practiceMode === "past") {
+    pool = qs.filter(q => q.id && String(q.id).startsWith("past"));
+    if (!pool.length) pool = qs;
+  }
   if (state.practiceMode === "wrong") {
     const set = new Set(state.wrongIds);
     pool = qs.filter(q => set.has(q.id));
@@ -684,13 +736,15 @@ app.addEventListener("click", (e) => {
   if (a === "essay-back") { state.essayIndex = null; render(); return; }
   if (a === "essay-drill-reveal") { state.essayDrillRevealed = !state.essayDrillRevealed; render(); return; }
   if (a === "essay-drill-next") {
-    state.essayDrillIndex = (state.essayDrillIndex + 1) % ESSAY_DRILLS.length;
+    const len = Math.max(allEssayDrills().length, 1);
+    state.essayDrillIndex = (state.essayDrillIndex + 1) % len;
     state.essayDrillAnswer = "";
     state.essayDrillRevealed = false;
     markStudied(); save(); render(); return;
   }
   if (a === "essay-drill-prev") {
-    state.essayDrillIndex = (state.essayDrillIndex - 1 + ESSAY_DRILLS.length) % ESSAY_DRILLS.length;
+    const len = Math.max(allEssayDrills().length, 1);
+    state.essayDrillIndex = (state.essayDrillIndex - 1 + len) % len;
     state.essayDrillAnswer = "";
     state.essayDrillRevealed = false;
     render(); return;
