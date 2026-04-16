@@ -227,6 +227,7 @@ function allEssayDrills() {
       prompt: q.prompt,
       points: q.expectedPoints || [],
       sample: q.sampleAnswer || "",
+      questionText: q.questionText || "",
       source: q.source
     }));
   return ESSAY_DRILLS.concat(pastShort);
@@ -238,9 +239,9 @@ function allEssayTopics() {
     .map((q, i) => ({
       theme: q.theme || q.source?.attribution || `過去問論述 ${i + 1}`,
       icon: "pen",
-      scenario: q.source?.attribution || "IPA過去問の午後II論述テーマ",
+      scenario: q.scenario || q.source?.attribution || "IPA過去問の午後II論述テーマ",
       keywords: q.tags || [],
-      structure: [
+      structure: q.structure || [
         ["出典", q.source?.attribution || ""],
         ["設問要求", (q.requirements || []).join(" / ")],
         ["構成メモ", q.outlineHint || ""]
@@ -430,6 +431,7 @@ function practiceTab() {
   const total = allQuestions().length;
   const q = state.practicePool[state.practiceIndex];
   const acc = state.practiceScore.total ? Math.round(state.practiceScore.correct / state.practiceScore.total * 100) : 0;
+  const noPastChoice = state.practiceMode === "past" && pastChoiceQuestions().length === 0;
   return `<section class="stack">
     <article class="card screen-title">
       <h2>無限練習モード</h2>
@@ -441,7 +443,7 @@ function practiceTab() {
       ${seg("wrong","弱点優先")}
       ${seg("recent","最近の範囲")}
     </div>
-    ${!q ? `<button class="btn alt" data-action="start-practice">${icon("shuffle")}練習スタート</button>` : `
+    ${noPastChoice ? `<article class="card"><div class="card-title">${icon("book")}択一過去問はOCR待ち</div><p class="lesson-text">公式PDFから解答・講評は抽出済みです。問題文と選択肢は空データにせず、論文道場の短文Q&A・論文フレームへ反映しています。</p><button class="btn pink" data-action="tab" data-tab="essay">${icon("pen")}論文道場で過去問を見る</button></article>` : !q ? `<button class="btn alt" data-action="start-practice">${icon("shuffle")}練習スタート</button>` : `
       <div class="quiz-top"><span>練習 ${state.practiceScore.total + 1}問目</span><span>正答率 ${acc}% (${state.practiceScore.correct}/${state.practiceScore.total})</span></div>
       <div class="note" style="padding:9px;text-align:center;color:var(--muted);font-size:.78rem">Day${q.day}: ${esc(q.title)}</div>
       <article class="card"><p class="question">${esc(q.q)}</p><div class="choices">${q.c.map((c, i) => choiceButton(q, c, i, "practice-answer", state.practiceSelected, state.practiceAnswered)).join("")}</div>${sourceLine(q.source)}</article>
@@ -495,6 +497,7 @@ function essayShortTab() {
     <article class="card">
       <div class="quiz-top"><span>${esc(drill.theme)}・${esc(drill.type)}</span><span>${esc(drill.limit)}目安</span></div>
       <p class="question">${esc(drill.prompt)}</p>
+      ${drill.questionText ? `<details class="ocr-excerpt"><summary>問題冊子OCRを見る</summary><p>${esc(drill.questionText)}</p></details>` : ""}
       <textarea class="short-answer" data-essay-drill-answer placeholder="ここに自分の回答を書く">${esc(state.essayDrillAnswer)}</textarea>
       <div class="answer-count">${count}字</div>
     </article>
@@ -656,7 +659,6 @@ function startPractice() {
   let pool = qs;
   if (state.practiceMode === "past") {
     pool = qs.filter(q => q.id && String(q.id).startsWith("past"));
-    if (!pool.length) pool = qs;
   }
   if (state.practiceMode === "wrong") {
     const set = new Set(state.wrongIds);
